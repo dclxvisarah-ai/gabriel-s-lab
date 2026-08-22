@@ -349,7 +349,7 @@ export function nextProbe(
   const ranked = resolution.scores
     .slice()
     .sort((a, b) => b.weight - a.weight || a.question - b.question);
-  const top = ranked[0];
+  const top = ranked[0]!;
   const contenders = ranked.filter((s) => s.weight > 0 && top.weight - s.weight < 0.9);
 
   if (resolution.status === "resolved" && resolution.confidence >= 0.6) {
@@ -372,7 +372,7 @@ export function nextProbe(
   // Gain is highest when strong contenders are close together and thinly corroborated.
   const ambiguity =
     contenders.length > 1
-      ? 1 - Math.min(1, (top.weight - contenders[1].weight) / 0.9)
+      ? 1 - Math.min(1, (top.weight - contenders[1]!.weight) / 0.9)
       : top.weight > 0
         ? 0.4
         : 1;
