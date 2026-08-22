@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EngineRouteImport } from './routes/engine'
 import { Route as SpecRouteImport } from './routes/spec'
 import { Route as TestsRouteImport } from './routes/tests'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EngineRoute = EngineRouteImport.update({
+  id: '/engine',
+  path: '/engine',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpecRoute = SpecRouteImport.update({
@@ -31,30 +37,34 @@ const TestsRoute = TestsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/engine': typeof EngineRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/engine': typeof EngineRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/engine': typeof EngineRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/spec' | '/tests'
+  fullPaths: '/' | '/engine' | '/spec' | '/tests'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/spec' | '/tests'
-  id: '__root__' | '/' | '/spec' | '/tests'
+  to: '/' | '/engine' | '/spec' | '/tests'
+  id: '__root__' | '/' | '/engine' | '/spec' | '/tests'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EngineRoute: typeof EngineRoute
   SpecRoute: typeof SpecRoute
   TestsRoute: typeof TestsRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/engine': {
+      id: '/engine'
+      path: '/engine'
+      fullPath: '/engine'
+      preLoaderRoute: typeof EngineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spec': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EngineRoute: EngineRoute,
   SpecRoute: SpecRoute,
   TestsRoute: TestsRoute,
 }
