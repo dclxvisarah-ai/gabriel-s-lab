@@ -18,7 +18,14 @@ import {
 export interface CaptureTestResult {
   id: string;
   name: string;
-  category: "shape" | "required" | "ordering" | "reference" | "missingness" | "separation";
+  category:
+    | "shape"
+    | "required"
+    | "ordering"
+    | "reference"
+    | "missingness"
+    | "separation"
+    | "boundary";
   intent: string;
   passed: boolean;
   observed: string;
@@ -217,6 +224,26 @@ export function runCaptureTests(): CaptureTestResult[] {
         "Two runs of the same instrument at different versions/revisions must be distinguishable from the record alone.",
       passed: r.valid && preserved,
       observed: `${valid.instrument.instrumentVersion} @ ${valid.instrument.sourceRevision} vs ${alt.instrument.instrumentVersion} @ ${alt.instrument.sourceRevision}`,
+    });
+  }
+
+  /* 9. Restart is terminal: nothing may follow it in the same record. */
+  {
+    const after = buildFixtureRecord([
+      ...FIXTURE_SCRIPT_FULL,
+      { kind: "display", questionId: "sq-1" },
+      { kind: "outcome", questionId: "sq-1", state: "unanswered" },
+    ]);
+    const terminal = validateCaptureRecord(buildFixtureRecord(FIXTURE_SCRIPT_FULL));
+    const a = validateCaptureRecord(after);
+    push({
+      id: "cap-9",
+      name: "A restart boundary must be the final event of the record",
+      category: "boundary",
+      intent:
+        "Restart closes the record; the next interaction belongs to a separate record with a new runId.",
+      passed: terminal.valid && !a.valid,
+      observed: `restart as final event ${terminal.valid ? "valid" : "invalid"}; events after restart → ${a.valid ? "accepted" : `rejected (${codes(a.issues)})`}`,
     });
   }
 
