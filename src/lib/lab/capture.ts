@@ -363,6 +363,21 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
     }
   });
 
+  // Restart is terminal: it closes the record. The next interaction belongs to
+  // a separate record with a new runId, so nothing may follow it here.
+  for (let i = 0; i < events.length - 1; i++) {
+    const e = events[i];
+    if (isObj(e) && e["type"] === "boundary" && e["boundary"] === "restart") {
+      issues.push({
+        path: `$.events[${i}]`,
+        code: "contract_violation",
+        message:
+          "a restart boundary must be the final event; subsequent interaction requires a new runId",
+      });
+      break;
+    }
+  }
+
   // Referential integrity + explicit outcome per displayed question.
   const displayed = new Map<string, { choices: Set<string> }>();
   const resolved = new Set<string>();
