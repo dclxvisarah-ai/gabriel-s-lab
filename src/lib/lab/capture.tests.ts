@@ -28,7 +28,7 @@ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 const codes = (issues: ValidationIssue[]) => issues.map((i) => `${i.path}:${i.code}`).join(", ");
 
 function withoutPath(record: CaptureRecord, path: string[]): unknown {
-  const copy = clone(record) as Record<string, unknown>;
+  const copy = clone(record) as unknown as Record<string, unknown>;
   let node: Record<string, unknown> = copy;
   for (const seg of path.slice(0, -1)) node = node[seg] as Record<string, unknown>;
   delete node[path[path.length - 1]!];
