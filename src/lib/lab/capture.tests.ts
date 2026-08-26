@@ -227,5 +227,25 @@ export function runCaptureTests(): CaptureTestResult[] {
     });
   }
 
+  /* 9. Restart is terminal: nothing may follow it in the same record. */
+  {
+    const after = buildFixtureRecord([
+      ...FIXTURE_SCRIPT_FULL,
+      { kind: "display", questionId: "sq-1" },
+      { kind: "outcome", questionId: "sq-1", state: "unanswered" },
+    ]);
+    const terminal = validateCaptureRecord(buildFixtureRecord(FIXTURE_SCRIPT_FULL));
+    const a = validateCaptureRecord(after);
+    push({
+      id: "cap-9",
+      name: "A restart boundary must be the final event of the record",
+      category: "boundary",
+      intent:
+        "Restart closes the record; the next interaction belongs to a separate record with a new runId.",
+      passed: terminal.valid && !a.valid,
+      observed: `restart as final event ${terminal.valid ? "valid" : "invalid"}; events after restart → ${a.valid ? "accepted" : `rejected (${codes(a.issues)})`}`,
+    });
+  }
+
   return results;
 }
