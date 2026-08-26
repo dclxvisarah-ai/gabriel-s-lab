@@ -18,7 +18,14 @@ import {
 export interface CaptureTestResult {
   id: string;
   name: string;
-  category: "shape" | "required" | "ordering" | "reference" | "missingness" | "separation";
+  category:
+    | "shape"
+    | "required"
+    | "ordering"
+    | "reference"
+    | "missingness"
+    | "separation"
+    | "boundary";
   intent: string;
   passed: boolean;
   observed: string;
