@@ -379,7 +379,7 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
   }
 
   // Referential integrity + explicit outcome per displayed question.
-  const displayed = new Map<string, { choices: Set<string> }>();
+  const displayed = new Map<string, { choices: Set<string>; labels: Map<string, string> }>();
   const resolved = new Set<string>();
   const eventIds = new Set<string>();
   for (let i = 0; i < events.length; i++) {
