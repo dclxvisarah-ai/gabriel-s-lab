@@ -379,9 +379,16 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
     }
   }
 
-  // Referential integrity + explicit outcome per displayed question.
-  const displayed = new Map<string, { choices: Set<string>; labels: Map<string, string> }>();
-  const resolved = new Set<string>();
+  // Referential integrity + explicit outcome per displayed question OCCURRENCE.
+  // Each display of a question is a distinct observation occurrence: a later
+  // selection/outcome resolves only the latest occurrence of that question.
+  interface DisplayState {
+    choices: Set<string>;
+    labels: Map<string, string>;
+    /** One entry per display occurrence, in display order. */
+    occurrences: { index: number; resolved: boolean }[];
+  }
+  const displayed = new Map<string, DisplayState>();
   const eventIds = new Set<string>();
   for (let i = 0; i < events.length; i++) {
     const e = events[i];
@@ -412,8 +419,10 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
           labels.set(c["choiceId"], c["label"]);
         }
       }
-      displayed.set(qid, { choices, labels });
-      resolved.delete(qid);
+      const prior = displayed.get(qid);
+      const occurrences = prior ? prior.occurrences : [];
+      occurrences.push({ index: i, resolved: false });
+      displayed.set(qid, { choices, labels, occurrences });
     }
     if ((e["type"] === "choice_selected" || e["type"] === "outcome_state") && qid) {
       const d = displayed.get(qid);
@@ -423,44 +432,50 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
           code: "unknown_reference",
           message: `${qid} was never displayed before this event`,
         });
-      } else if (e["type"] === "choice_selected") {
-        const cid = e["choiceId"];
-        if (typeof cid === "string" && !d.choices.has(cid)) {
-          issues.push({
-            path: `$.events[${i}].choiceId`,
-            code: "unknown_reference",
-            message: `${cid} was not among the displayed choices for ${qid}`,
-          });
-        } else if (typeof cid === "string") {
-          // choiceLabel is the exact label displayed at selection time.
-          const label = e["choiceLabel"];
-          const expected = d.labels.get(cid);
-          if (typeof label === "string" && expected !== undefined && label !== expected) {
+      } else {
+        if (e["type"] === "choice_selected") {
+          const cid = e["choiceId"];
+          if (typeof cid === "string" && !d.choices.has(cid)) {
             issues.push({
-              path: `$.events[${i}].choiceLabel`,
-              code: "label_mismatch",
-              message: `choiceLabel "${label}" does not match the displayed label "${expected}" for ${cid}`,
+              path: `$.events[${i}].choiceId`,
+              code: "unknown_reference",
+              message: `${cid} was not among the displayed choices for ${qid}`,
             });
+          } else if (typeof cid === "string") {
+            // choiceLabel is the exact label displayed at selection time.
+            const label = e["choiceLabel"];
+            const expected = d.labels.get(cid);
+            if (typeof label === "string" && expected !== undefined && label !== expected) {
+              issues.push({
+                path: `$.events[${i}].choiceLabel`,
+                code: "label_mismatch",
+                message: `choiceLabel "${label}" does not match the displayed label "${expected}" for ${cid}`,
+              });
+            }
           }
         }
+        const latest = d.occurrences[d.occurrences.length - 1];
+        if (latest) latest.resolved = true;
       }
-      resolved.add(qid);
     }
   }
 
   // Missingness without inference: a closed run must state an outcome for
-  // every displayed question rather than let absence imply one.
+  // every displayed question OCCURRENCE rather than let absence imply one.
   if (input["endedAt"] !== null && input["endedAt"] !== undefined) {
-    for (const qid of displayed.keys()) {
-      if (!resolved.has(qid)) {
-        issues.push({
-          path: "$.events",
-          code: "contract_violation",
-          message: `displayed question ${qid} has no explicit outcome; missingness must not be inferred`,
-        });
+    for (const [qid, d] of displayed) {
+      for (const occ of d.occurrences) {
+        if (!occ.resolved) {
+          issues.push({
+            path: `$.events[${occ.index}]`,
+            code: "contract_violation",
+            message: `display occurrence of question ${qid} has no explicit outcome; missingness must not be inferred`,
+          });
+        }
       }
     }
   }
+
 
   // Derived snapshot stays a separate sibling object.
   const derived = input["derived"];
