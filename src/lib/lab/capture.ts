@@ -153,6 +153,7 @@ export interface ValidationIssue {
     | "bad_sequence"
     | "unknown_reference"
     | "duplicate"
+    | "label_mismatch"
     | "contract_violation";
   message: string;
 }
