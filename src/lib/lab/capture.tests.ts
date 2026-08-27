@@ -267,5 +267,31 @@ export function runCaptureTests(): CaptureTestResult[] {
     });
   }
 
+  /* 11. Missingness is tracked per display occurrence, not per questionId. */
+  {
+    const record = buildFixtureRecord([
+      { kind: "display", questionId: "sq-1" },
+      { kind: "display", questionId: "sq-1" },
+      { kind: "select", questionId: "sq-1", choiceId: "sq-1-b" },
+    ]);
+    const r = validateCaptureRecord(record);
+    const firstUnresolved = r.issues.some(
+      (i) => i.path === "$.events[0]" && i.code === "contract_violation",
+    );
+    const secondNotFlagged = !r.issues.some((i) => i.path === "$.events[1]");
+    push({
+      id: "cap-11",
+      name: "An earlier display occurrence left unresolved fails even if a later one is answered",
+      category: "missingness",
+      intent:
+        "Each display is a distinct observation occurrence; answering a re-display must not retroactively resolve the first display.",
+      passed: !r.valid && firstUnresolved && secondNotFlagged,
+      observed: r.valid
+        ? "record with unresolved first occurrence accepted"
+        : `rejected (${codes(r.issues)})`,
+    });
+  }
+
   return results;
 }
+
