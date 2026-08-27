@@ -273,6 +273,20 @@ export type TranscriptStep =
   | TranscriptBoundaryStep;
 
 /**
+ * One display of a question is one observation occurrence. Missingness is
+ * tracked per occurrence: a re-display starts unresolved (`state: null`) and is
+ * resolved only by a later selection or explicit outcome for that occurrence.
+ */
+export interface TranscriptOccurrence {
+  /** Sequence of the question_displayed event that opened this occurrence. */
+  displaySequence: number;
+  /** Selections stated after this display and before the next one. */
+  selections: { sequence: number; choiceId: string; choiceLabel: string }[];
+  /** Explicitly stated outcome for this occurrence, or null when unstated. */
+  state: MissingnessState | null;
+}
+
+/**
  * Per-question state as *stated by the log*. `state: null` means the log never
  * stated an outcome — it is reported as unknown and never inferred.
  */
@@ -284,9 +298,12 @@ export interface TranscriptQuestionState {
   lastChoices: { choiceId: string; label: string }[];
   /** Every selection in log order, including superseded ones. */
   selections: { sequence: number; choiceId: string; choiceLabel: string }[];
-  /** Explicitly stated outcome, or null when the log states none. */
+  /** One entry per display, in log order. */
+  occurrences: TranscriptOccurrence[];
+  /** Stated outcome of the LATEST occurrence, or null when the log states none. */
   state: MissingnessState | null;
 }
+
 
 export interface Transcript {
   runId: string;
