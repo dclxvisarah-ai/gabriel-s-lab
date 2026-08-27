@@ -430,6 +430,17 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
             code: "unknown_reference",
             message: `${cid} was not among the displayed choices for ${qid}`,
           });
+        } else if (typeof cid === "string") {
+          // choiceLabel is the exact label displayed at selection time.
+          const label = e["choiceLabel"];
+          const expected = d.labels.get(cid);
+          if (typeof label === "string" && expected !== undefined && label !== expected) {
+            issues.push({
+              path: `$.events[${i}].choiceLabel`,
+              code: "label_mismatch",
+              message: `choiceLabel "${label}" does not match the displayed label "${expected}" for ${cid}`,
+            });
+          }
         }
       }
       resolved.add(qid);
