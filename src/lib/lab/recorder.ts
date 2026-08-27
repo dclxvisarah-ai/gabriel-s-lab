@@ -273,6 +273,20 @@ export type TranscriptStep =
   | TranscriptBoundaryStep;
 
 /**
+ * One display of a question is one observation occurrence. Missingness is
+ * tracked per occurrence: a re-display starts unresolved (`state: null`) and is
+ * resolved only by a later selection or explicit outcome for that occurrence.
+ */
+export interface TranscriptOccurrence {
+  /** Sequence of the question_displayed event that opened this occurrence. */
+  displaySequence: number;
+  /** Selections stated after this display and before the next one. */
+  selections: { sequence: number; choiceId: string; choiceLabel: string }[];
+  /** Explicitly stated outcome for this occurrence, or null when unstated. */
+  state: MissingnessState | null;
+}
+
+/**
  * Per-question state as *stated by the log*. `state: null` means the log never
  * stated an outcome — it is reported as unknown and never inferred.
  */
@@ -284,9 +298,12 @@ export interface TranscriptQuestionState {
   lastChoices: { choiceId: string; label: string }[];
   /** Every selection in log order, including superseded ones. */
   selections: { sequence: number; choiceId: string; choiceLabel: string }[];
-  /** Explicitly stated outcome, or null when the log states none. */
+  /** One entry per display, in log order. */
+  occurrences: TranscriptOccurrence[];
+  /** Stated outcome of the LATEST occurrence, or null when the log states none. */
   state: MissingnessState | null;
 }
+
 
 export interface Transcript {
   runId: string;
@@ -325,6 +342,13 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
           choices: e.choices.map((c) => ({ ...c })),
         });
         const prev = byQuestion.get(e.questionId);
+        // A re-display opens a NEW observation occurrence: it starts unresolved
+        // and never inherits an earlier occurrence's stated outcome.
+        const occurrence: TranscriptOccurrence = {
+          displaySequence: e.sequence,
+          selections: [],
+          state: null,
+        };
         byQuestion.set(e.questionId, {
           questionId: e.questionId,
           displayCount: (prev?.displayCount ?? 0) + 1,
@@ -332,7 +356,8 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
           lastNoteText: e.noteText,
           lastChoices: e.choices.map((c) => ({ ...c })),
           selections: prev?.selections ?? [],
-          state: prev?.state ?? null,
+          occurrences: [...(prev?.occurrences ?? []), occurrence],
+          state: null,
         });
         break;
       }
@@ -347,10 +372,13 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
         });
         const q = byQuestion.get(e.questionId);
         if (q) {
-          q.selections = [
-            ...q.selections,
-            { sequence: e.sequence, choiceId: e.choiceId, choiceLabel: e.choiceLabel },
-          ];
+          const entry = { sequence: e.sequence, choiceId: e.choiceId, choiceLabel: e.choiceLabel };
+          q.selections = [...q.selections, entry];
+          const current = q.occurrences[q.occurrences.length - 1];
+          if (current) {
+            current.selections = [...current.selections, entry];
+            current.state = "answered";
+          }
           q.state = "answered";
         }
         break;
@@ -364,9 +392,14 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
           state: e.state,
         });
         const q = byQuestion.get(e.questionId);
-        if (q) q.state = e.state;
+        if (q) {
+          const current = q.occurrences[q.occurrences.length - 1];
+          if (current) current.state = e.state;
+          q.state = e.state;
+        }
         break;
       }
+
       case "boundary": {
         steps.push({
           kind: "boundary",
