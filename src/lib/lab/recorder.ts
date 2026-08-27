@@ -342,6 +342,13 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
           choices: e.choices.map((c) => ({ ...c })),
         });
         const prev = byQuestion.get(e.questionId);
+        // A re-display opens a NEW observation occurrence: it starts unresolved
+        // and never inherits an earlier occurrence's stated outcome.
+        const occurrence: TranscriptOccurrence = {
+          displaySequence: e.sequence,
+          selections: [],
+          state: null,
+        };
         byQuestion.set(e.questionId, {
           questionId: e.questionId,
           displayCount: (prev?.displayCount ?? 0) + 1,
@@ -349,7 +356,8 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
           lastNoteText: e.noteText,
           lastChoices: e.choices.map((c) => ({ ...c })),
           selections: prev?.selections ?? [],
-          state: prev?.state ?? null,
+          occurrences: [...(prev?.occurrences ?? []), occurrence],
+          state: null,
         });
         break;
       }
@@ -364,10 +372,13 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
         });
         const q = byQuestion.get(e.questionId);
         if (q) {
-          q.selections = [
-            ...q.selections,
-            { sequence: e.sequence, choiceId: e.choiceId, choiceLabel: e.choiceLabel },
-          ];
+          const entry = { sequence: e.sequence, choiceId: e.choiceId, choiceLabel: e.choiceLabel };
+          q.selections = [...q.selections, entry];
+          const current = q.occurrences[q.occurrences.length - 1];
+          if (current) {
+            current.selections = [...current.selections, entry];
+            current.state = "answered";
+          }
           q.state = "answered";
         }
         break;
@@ -381,9 +392,14 @@ export function reconstructTranscript(record: CaptureRecord): Transcript {
           state: e.state,
         });
         const q = byQuestion.get(e.questionId);
-        if (q) q.state = e.state;
+        if (q) {
+          const current = q.occurrences[q.occurrences.length - 1];
+          if (current) current.state = e.state;
+          q.state = e.state;
+        }
         break;
       }
+
       case "boundary": {
         steps.push({
           kind: "boundary",
