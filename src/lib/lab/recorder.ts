@@ -28,7 +28,8 @@ export class RecorderError extends Error {
       | "restart_terminal"
       | "unknown_question"
       | "unknown_choice"
-      | "already_ended",
+      | "already_ended"
+      | "outcome_already_stated",
     message: string,
   ) {
     super(message);
@@ -179,6 +180,28 @@ export function recordOutcomeState(
     throw new RecorderError(
       "unknown_question",
       `${out.questionId} was never displayed; an outcome may not be recorded for it`,
+    );
+  }
+  // One terminal outcome per display occurrence: if an outcome_state already
+  // follows the latest display of this question, the current occurrence is
+  // resolved and a second outcome is a contract violation. A re-display opens
+  // a new occurrence and may be resolved again.
+  let latestDisplaySeq = -1;
+  for (const e of record.events) {
+    if (e.type === "question_displayed" && e.questionId === out.questionId) {
+      latestDisplaySeq = e.sequence;
+    }
+  }
+  const alreadyStated = record.events.some(
+    (e) =>
+      e.type === "outcome_state" &&
+      e.questionId === out.questionId &&
+      e.sequence > latestDisplaySeq,
+  );
+  if (alreadyStated) {
+    throw new RecorderError(
+      "outcome_already_stated",
+      `${out.questionId} already has a stated outcome for its current display occurrence; a re-display is required before another outcome may be recorded`,
     );
   }
   return append(

@@ -319,6 +319,38 @@ export function runRecorderTests(): RecorderTestResult[] {
     });
   }
 
+  /* 10. Regression: one terminal outcome_state per display occurrence. */
+  {
+    let r = startRun({ runId: "recorder-run-0006", startedAt: stamp(0), instrument });
+    r = display(r, "sq-1");
+    r = recordOutcomeState(r, { questionId: "sq-1", state: "skipped" }, CLOCK);
+    const single = validateCaptureRecord(endRun(r, stamp(r.events.length)));
+    let secondCode: string;
+    try {
+      recordOutcomeState(r, { questionId: "sq-1", state: "unanswered" }, CLOCK);
+      secondCode = "accepted";
+    } catch (err) {
+      secondCode = err instanceof RecorderError ? err.code : String(err);
+    }
+    // A re-display opens a new occurrence, which may be resolved again.
+    let r2 = display(r, "sq-1");
+    let redisplayOk = true;
+    try {
+      r2 = recordOutcomeState(r2, { questionId: "sq-1", state: "unanswered" }, CLOCK);
+    } catch {
+      redisplayOk = false;
+    }
+    push({
+      id: "rec-10",
+      name: "A second outcome_state for the same display occurrence is rejected",
+      category: "missingness",
+      intent:
+        "Each display occurrence receives at most one terminal outcome; a new occurrence requires a new question_displayed event.",
+      passed: single.valid && secondCode === "outcome_already_stated" && redisplayOk,
+      observed: `single outcome valid ${single.valid}; second outcome → ${secondCode}; outcome after re-display ${redisplayOk ? "accepted" : "rejected"}`,
+    });
+  }
+
   return results;
 }
 
