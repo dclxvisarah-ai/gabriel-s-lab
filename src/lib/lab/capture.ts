@@ -153,6 +153,7 @@ export interface ValidationIssue {
     | "bad_sequence"
     | "unknown_reference"
     | "duplicate"
+    | "label_mismatch"
     | "contract_violation";
   message: string;
 }
@@ -379,7 +380,7 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
   }
 
   // Referential integrity + explicit outcome per displayed question.
-  const displayed = new Map<string, { choices: Set<string> }>();
+  const displayed = new Map<string, { choices: Set<string>; labels: Map<string, string> }>();
   const resolved = new Set<string>();
   const eventIds = new Set<string>();
   for (let i = 0; i < events.length; i++) {
@@ -397,15 +398,21 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
     }
     const qid = typeof e["questionId"] === "string" ? (e["questionId"] as string) : null;
     if (e["type"] === "question_displayed" && qid) {
-      const choices = Array.isArray(e["choices"])
-        ? new Set(
-            (e["choices"] as unknown[])
-              .filter(isObj)
-              .map((c) => c["choiceId"])
-              .filter((c): c is string => typeof c === "string"),
-          )
-        : new Set<string>();
-      displayed.set(qid, { choices });
+      const rawChoices = Array.isArray(e["choices"])
+        ? (e["choices"] as unknown[]).filter(isObj)
+        : [];
+      const choices = new Set(
+        rawChoices
+          .map((c) => c["choiceId"])
+          .filter((c): c is string => typeof c === "string"),
+      );
+      const labels = new Map<string, string>();
+      for (const c of rawChoices) {
+        if (typeof c["choiceId"] === "string" && typeof c["label"] === "string") {
+          labels.set(c["choiceId"], c["label"]);
+        }
+      }
+      displayed.set(qid, { choices, labels });
       resolved.delete(qid);
     }
     if ((e["type"] === "choice_selected" || e["type"] === "outcome_state") && qid) {
@@ -424,6 +431,17 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
             code: "unknown_reference",
             message: `${cid} was not among the displayed choices for ${qid}`,
           });
+        } else if (typeof cid === "string") {
+          // choiceLabel is the exact label displayed at selection time.
+          const label = e["choiceLabel"];
+          const expected = d.labels.get(cid);
+          if (typeof label === "string" && expected !== undefined && label !== expected) {
+            issues.push({
+              path: `$.events[${i}].choiceLabel`,
+              code: "label_mismatch",
+              message: `choiceLabel "${label}" does not match the displayed label "${expected}" for ${cid}`,
+            });
+          }
         }
       }
       resolved.add(qid);

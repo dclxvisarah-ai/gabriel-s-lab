@@ -247,5 +247,25 @@ export function runCaptureTests(): CaptureTestResult[] {
     });
   }
 
+  /* 10. Adversarial: choiceLabel must be the exact label displayed at selection time. */
+  {
+    const tampered = clone(valid);
+    const sel = tampered.events.find((e) => e.type === "choice_selected")!;
+    const original = (sel as { choiceLabel: string }).choiceLabel;
+    (sel as { choiceLabel: string }).choiceLabel = `${original} (TAMPERED)`;
+    const r = validateCaptureRecord(tampered);
+    push({
+      id: "cap-10",
+      name: "Mutating only choiceLabel on a selection fails validation",
+      category: "reference",
+      intent:
+        "choiceLabel is part of the raw evidence: it must match the exact label shown on screen for that choiceId at display time.",
+      passed: !r.valid && r.issues.some((i) => i.code === "label_mismatch"),
+      observed: r.valid
+        ? "tampered label accepted"
+        : `rejected (${codes(r.issues)})`,
+    });
+  }
+
   return results;
 }
