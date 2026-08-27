@@ -397,15 +397,21 @@ export function validateCaptureRecord(input: unknown): ValidationResult {
     }
     const qid = typeof e["questionId"] === "string" ? (e["questionId"] as string) : null;
     if (e["type"] === "question_displayed" && qid) {
-      const choices = Array.isArray(e["choices"])
-        ? new Set(
-            (e["choices"] as unknown[])
-              .filter(isObj)
-              .map((c) => c["choiceId"])
-              .filter((c): c is string => typeof c === "string"),
-          )
-        : new Set<string>();
-      displayed.set(qid, { choices });
+      const rawChoices = Array.isArray(e["choices"])
+        ? (e["choices"] as unknown[]).filter(isObj)
+        : [];
+      const choices = new Set(
+        rawChoices
+          .map((c) => c["choiceId"])
+          .filter((c): c is string => typeof c === "string"),
+      );
+      const labels = new Map<string, string>();
+      for (const c of rawChoices) {
+        if (typeof c["choiceId"] === "string" && typeof c["label"] === "string") {
+          labels.set(c["choiceId"], c["label"]);
+        }
+      }
+      displayed.set(qid, { choices, labels });
       resolved.delete(qid);
     }
     if ((e["type"] === "choice_selected" || e["type"] === "outcome_state") && qid) {
