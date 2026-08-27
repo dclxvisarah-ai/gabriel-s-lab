@@ -283,5 +283,42 @@ export function runRecorderTests(): RecorderTestResult[] {
     });
   }
 
+  /* 9. Regression: a re-display is a new occurrence and must not inherit the
+        earlier answer when the log states no second outcome. */
+  {
+    let r = startRun({ runId: "recorder-run-0005", startedAt: stamp(0), instrument });
+    r = display(r, "sq-1");
+    r = recordSelection(r, { questionId: "sq-1", choiceId: "sq-1-b" }, CLOCK);
+    r = recordBoundary(r, { boundary: "navigate_forward", questionId: "sq-1" }, CLOCK);
+    r = recordBoundary(r, { boundary: "navigate_back", questionId: "sq-1" }, CLOCK);
+    r = display(r, "sq-1");
+    const closed = endRun(r, stamp(r.events.length));
+    const v = validateCaptureRecord(closed);
+    const t = reconstructTranscript(closed);
+    const q1 = t.questions.find((x) => x.questionId === "sq-1")!;
+    const occ = q1.occurrences;
+    const passed =
+      !v.valid &&
+      q1.displayCount === 2 &&
+      occ.length === 2 &&
+      occ[0]!.state === "answered" &&
+      occ[0]!.selections.length === 1 &&
+      occ[1]!.state === null &&
+      occ[1]!.selections.length === 0 &&
+      q1.state === null &&
+      t.unstatedOutcomes.includes("sq-1") &&
+      q1.selections.length === 1;
+    push({
+      id: "rec-9",
+      name: "Re-display without a new outcome replays as unresolved, not as the earlier answer",
+      category: "missingness",
+      intent:
+        "Each display is a distinct observation occurrence; a second display starts unknown and only a later selection/outcome resolves it.",
+      passed,
+      observed: `closed record valid ${v.valid}; occurrences [${occ.map((o) => String(o.state)).join(", ")}]; question state ${String(q1.state)}; prior selections kept ${q1.selections.length}`,
+    });
+  }
+
   return results;
 }
+
