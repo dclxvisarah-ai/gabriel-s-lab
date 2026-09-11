@@ -2,7 +2,18 @@
 
 Verification only. No code, config, or deployment was changed.
 
-## 1. What currently matches the locked V2 target
+## 0. Authority recorded
+
+Expanded V2 is logged as locked Gabriel's Number architecture: no additional Numbers, expanded semantic architecture of the existing nine. Prototype thresholds, weights, gain formulas, stopping values and normalization rules remain research/unvalidated. V3 stays research-only. Detailed V2 source files — not this audit and not memory — are the authority for exact vocabulary, mappings, relationships and diagrams; nothing below invents V2 content.
+
+Classification key used throughout: section 1 = BUILT (preserve), section 2 = NEW or CORRECTION, section 3 = UNVERIFIED, section 4 = UNKNOWN.
+
+Immediate conflicts visible in current source:
+- Overlap is only ever suppressive (`engine.ts:259–269` collision guard) — conflicts with "overlap is information".
+- Lexical similarity alone merges evidence units (`taxonomy.ts:141–152`) — conflicts with "vocabulary similarity is not proof of an intersection".
+- The 1–9 material is labelled provisional/prototype in spec and UI — conflicts with locked status.
+
+## 1. What currently matches the locked V2 target — BUILT, preserve
 
 - **Nine territories exist and are not expanded in count.** `src/lib/lab/spec.ts:14` types `StructuralQuestionId = 1..9`; `STRUCTURAL_QUESTIONS` (lines 26–90) holds exactly nine entries with the agreed labels (1 Beginning/Identification … 9 Embodiment/Completion). No tenth Number anywhere.
 - **1–9 is non-sequential.** `spec.ts:96` states no ordering, adjacency, or magnitude may be inferred.
