@@ -255,9 +255,13 @@ export function runV2Tests(): V2TestResult[] {
       id: "v2-intersection-3",
       name: "Contradicting shared evidence is retained on the relationship",
       category: "earned-intersection",
-      intent: "Contradictions are information: recorded on the pair, never discarded.",
-      passed: r36.contradictingStatementIds.includes("s2") && !r36.earned,
-      observed: `state ${r36.state}; contradictions ${r36.contradictingStatementIds.join(",")}`,
+      intent:
+        "Contradictions are information: recorded on the pair, never discarded, even when other supporting evidence earns the intersection.",
+      passed:
+        r36.contradictingStatementIds.includes("s2") &&
+        r36.earned &&
+        r36.sharedStatementIds.includes("s1"),
+      observed: `state ${r36.state}; contradictions ${r36.contradictingStatementIds.join(",")}; earned ${r36.earned} on ${r36.sharedStatementIds.join(",")}`,
     });
   }
 
