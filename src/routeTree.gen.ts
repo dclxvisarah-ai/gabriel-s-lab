@@ -14,6 +14,7 @@ import { Route as CaptureRouteImport } from './routes/capture'
 import { Route as EngineRouteImport } from './routes/engine'
 import { Route as SpecRouteImport } from './routes/spec'
 import { Route as TestsRouteImport } from './routes/tests'
+import { Route as V2RouteImport } from './routes/v2'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const TestsRoute = TestsRouteImport.update({
   path: '/tests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const V2Route = V2RouteImport.update({
+  id: '/v2',
+  path: '/v2',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/engine': typeof EngineRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
+  '/v2': typeof V2Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/engine': typeof EngineRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
+  '/v2': typeof V2Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,14 @@ export interface FileRoutesById {
   '/engine': typeof EngineRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
+  '/v2': typeof V2Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/capture' | '/engine' | '/spec' | '/tests'
+  fullPaths: '/' | '/capture' | '/engine' | '/spec' | '/tests' | '/v2'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/capture' | '/engine' | '/spec' | '/tests'
-  id: '__root__' | '/' | '/capture' | '/engine' | '/spec' | '/tests'
+  to: '/' | '/capture' | '/engine' | '/spec' | '/tests' | '/v2'
+  id: '__root__' | '/' | '/capture' | '/engine' | '/spec' | '/tests' | '/v2'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +86,7 @@ export interface RootRouteChildren {
   EngineRoute: typeof EngineRoute
   SpecRoute: typeof SpecRoute
   TestsRoute: typeof TestsRoute
+  V2Route: typeof V2Route
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/v2': {
+      id: '/v2'
+      path: '/v2'
+      fullPath: '/v2'
+      preLoaderRoute: typeof V2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +142,7 @@ const rootRouteChildren: RootRouteChildren = {
   EngineRoute: EngineRoute,
   SpecRoute: SpecRoute,
   TestsRoute: TestsRoute,
+  V2Route: V2Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
