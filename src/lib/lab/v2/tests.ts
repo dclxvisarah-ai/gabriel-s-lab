@@ -148,7 +148,7 @@ export function runV2Tests(): V2TestResult[] {
     const rel57a = a.relationships.find((r) => r.key === "5-7")!;
     const rel57b = b.relationships.find((r) => r.key === "5-7")!;
     const sameRelationships =
-      JSON.stringify(a.relationships) === JSON.stringify(b.relationships.map((r, i) => ({ ...r, trace: a.relationships[i]!.trace })));
+      JSON.stringify(a.relationships) === JSON.stringify(b.relationships);
     const sameOutcome =
       a.outcome === b.outcome &&
       a.possibleNumber === b.possibleNumber &&
