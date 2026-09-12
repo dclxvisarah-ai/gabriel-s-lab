@@ -190,17 +190,33 @@ export function runV2Tests(): V2TestResult[] {
     const rich25 = rich.relationships.find((r) => r.key === "2-5")!;
     push({
       id: "v2-intersection-1",
-      name: "DIRECT pair stays candidate until shared evidence earns it",
+      name: "One evidence statement located in both territories earns the intersection",
       category: "earned-intersection",
       intent:
-        "A locked DIRECT CrossMap entry does not by itself create an intersection; shared evidence across independent probes does.",
+        "Locked V2: a response earns an intersection when it demonstrates both meanings. One statement may support multiple territories; independent probes are recorded as corroboration, not required.",
       passed:
-        thin25.state === "candidate_relationship" &&
-        !thin25.earned &&
+        thin25.state === "evidence_supported_intersection" &&
+        thin25.earned &&
+        thin25.sharedStatementIds.join(",") === "s1" &&
+        thin25.sharedProbes.length === 1 &&
         rich25.state === "evidence_supported_intersection" &&
         rich25.earned &&
         rich25.sharedProbes.length === 2,
-      observed: `one probe → ${thin25.state}; two probes → ${rich25.state} on evidence ${rich25.sharedStatementIds.join(",")}`,
+      observed: `one statement → ${thin25.state} on evidence ${thin25.sharedStatementIds.join(",")}; corroboration recorded: ${rich25.sharedProbes.length} probe(s)`,
+    });
+  }
+
+  {
+    const withNoEvidence = analyzeV2({ runId: RUN, statements: [] });
+    const rel25 = withNoEvidence.relationships.find((r) => r.key === "2-5")!;
+    push({
+      id: "v2-intersection-4",
+      name: "A locked DIRECT CrossMap entry alone never earns an intersection",
+      category: "earned-intersection",
+      intent:
+        "Removing the probe gate must not let the CrossMap itself create intersections; with no shared evidence the pair stays candidate.",
+      passed: rel25.state === "candidate_relationship" && !rel25.earned && rel25.sharedStatementIds.length === 0,
+      observed: `no evidence → state ${rel25.state}, earned ${rel25.earned}`,
     });
   }
 
