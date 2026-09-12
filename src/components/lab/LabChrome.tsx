@@ -9,6 +9,7 @@ const NAV = [
   { to: "/engine", label: "Engine" },
   { to: "/tests", label: "Tests" },
   { to: "/capture", label: "Capture" },
+  { to: "/research", label: "Research" },
 ] as const;
 
 export function LabBanner() {
