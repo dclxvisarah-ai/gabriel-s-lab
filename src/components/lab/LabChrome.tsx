@@ -5,6 +5,7 @@ import { LAB_STATUS } from "@/lib/lab/spec";
 const NAV = [
   { to: "/", label: "Overview" },
   { to: "/spec", label: "Spec" },
+  { to: "/v2", label: "V2" },
   { to: "/engine", label: "Engine" },
   { to: "/tests", label: "Tests" },
   { to: "/capture", label: "Capture" },
