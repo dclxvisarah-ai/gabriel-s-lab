@@ -337,7 +337,7 @@ export function analyzeV2(input: V2Input): V2Analysis {
   } else {
     resolution = resolve({
       evidence: engineEvidence,
-      availability: input.availability,
+      availability: input.availability ?? {},
       hypothesis: (input.hypothesis ?? null) as StructuralQuestionId | null,
     });
     outcome = resolution.status === "resolved" ? "resolved" : "undetermined";
