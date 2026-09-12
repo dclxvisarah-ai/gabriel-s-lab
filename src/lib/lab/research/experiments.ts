@@ -181,7 +181,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
       };
     },
     implicatesArchitecture: (m, flags) =>
-      m['unmapped']OverlapFlag === true || flags.some((f) => f.includes("Unmapped evidence overlap")),
+      m["unmappedOverlapFlag"] === true || flags.some((f) => f.includes("Unmapped evidence overlap")),
   },
 
   {
