@@ -56,6 +56,8 @@ export interface LoopInput {
   mission?: Mission;
   budget?: Partial<Budget>;
   hypotheses?: Hypothesis[];
+  /** Override the seeded experiment queue. Research use only. */
+  queue?: Record<string, string[]>;
 }
 
 export function runResearchLoop(input: LoopInput = {}): ResearchLedger {
