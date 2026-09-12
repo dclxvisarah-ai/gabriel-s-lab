@@ -66,7 +66,8 @@ export function runResearchLoop(input: LoopInput = {}): ResearchLedger {
 
   const hypotheses: Hypothesis[] = (input.hypotheses ?? SEED_HYPOTHESES).map((h) => ({ ...h }));
   const queue = new Map<string, string[]>();
-  for (const h of hypotheses) queue.set(h.id, [...(SEED_QUEUE[h.id] ?? [])]);
+  const seedQueue = input.queue ?? SEED_QUEUE;
+  for (const h of hypotheses) queue.set(h.id, [...(seedQueue[h.id] ?? [])]);
 
   const runCount = new Map<string, number>();
   const iterations: Iteration[] = [];
