@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CaptureRouteImport } from './routes/capture'
 import { Route as EngineRouteImport } from './routes/engine'
+import { Route as ResearchRouteImport } from './routes/research'
 import { Route as SpecRouteImport } from './routes/spec'
 import { Route as TestsRouteImport } from './routes/tests'
 import { Route as V2RouteImport } from './routes/v2'
@@ -29,6 +30,11 @@ const CaptureRoute = CaptureRouteImport.update({
 const EngineRoute = EngineRouteImport.update({
   id: '/engine',
   path: '/engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResearchRoute = ResearchRouteImport.update({
+  id: '/research',
+  path: '/research',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpecRoute = SpecRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/capture': typeof CaptureRoute
   '/engine': typeof EngineRoute
+  '/research': typeof ResearchRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
   '/v2': typeof V2Route
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/capture': typeof CaptureRoute
   '/engine': typeof EngineRoute
+  '/research': typeof ResearchRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
   '/v2': typeof V2Route
@@ -68,22 +76,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/capture': typeof CaptureRoute
   '/engine': typeof EngineRoute
+  '/research': typeof ResearchRoute
   '/spec': typeof SpecRoute
   '/tests': typeof TestsRoute
   '/v2': typeof V2Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/capture' | '/engine' | '/spec' | '/tests' | '/v2'
+  fullPaths:
+    '/' | '/capture' | '/engine' | '/research' | '/spec' | '/tests' | '/v2'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/capture' | '/engine' | '/spec' | '/tests' | '/v2'
-  id: '__root__' | '/' | '/capture' | '/engine' | '/spec' | '/tests' | '/v2'
+  to: '/' | '/capture' | '/engine' | '/research' | '/spec' | '/tests' | '/v2'
+  id:
+    | '__root__'
+    | '/'
+    | '/capture'
+    | '/engine'
+    | '/research'
+    | '/spec'
+    | '/tests'
+    | '/v2'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CaptureRoute: typeof CaptureRoute
   EngineRoute: typeof EngineRoute
+  ResearchRoute: typeof ResearchRoute
   SpecRoute: typeof SpecRoute
   TestsRoute: typeof TestsRoute
   V2Route: typeof V2Route
@@ -110,6 +129,13 @@ declare module '@tanstack/react-router' {
       path: '/engine'
       fullPath: '/engine'
       preLoaderRoute: typeof EngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/research': {
+      id: '/research'
+      path: '/research'
+      fullPath: '/research'
+      preLoaderRoute: typeof ResearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spec': {
@@ -140,6 +166,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CaptureRoute: CaptureRoute,
   EngineRoute: EngineRoute,
+  ResearchRoute: ResearchRoute,
   SpecRoute: SpecRoute,
   TestsRoute: TestsRoute,
   V2Route: V2Route,
