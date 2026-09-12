@@ -52,7 +52,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     prediction: {
       statement:
         "Every established-construct statement locates, and the located evidence occupies at least three distinct territories without being collapsed together.",
-      check: (m) => Number(m.unmapped) === 0 && Number(m.territoriesOccupied) >= 3,
+      check: (m) => Number(m['unmapped']) === 0 && Number(m['territoriesOccupied']) >= 3,
     },
     run: () => {
       const { analysis, unmapped, total } = analyze("fx-addiction-core");
@@ -80,7 +80,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     prediction: {
       statement:
         "All four unresolved-construct statements locate in at least one existing territory, i.e. no statement is left unmapped.",
-      check: (m) => Number(m.unmapped) === 0,
+      check: (m) => Number(m['unmapped']) === 0,
     },
     run: () => {
       const { analysis, unmapped, total } = analyze("fx-unresolved");
@@ -109,7 +109,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     prediction: {
       statement:
         "Re-probed with different wording, the previously unmapped constructs still fail to locate, so the gap is in inquiry coverage rather than in the wording of one response.",
-      check: (m) => Number(m.unmapped) === Number(m.statements),
+      check: (m) => Number(m['unmapped']) === Number(m['statements']),
     },
     run: () => {
       const { analysis, unmapped, total } = analyze("fx-unresolved-narrowed");
@@ -130,7 +130,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     prediction: {
       statement:
         "In a different drinking case, shared evidence again earns the 4↔9 intersection.",
-      check: (m) => m.earned49 === true,
+      check: (m) => m['earned49'] === true,
     },
     run: () => {
       const { analysis, unmapped, total } = analyze("fx-drinking-b");
@@ -162,7 +162,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     prediction: {
       statement:
         "The originally observed drinking case reproduces an earned 4↔9 intersection, which the locked CrossMap records as NO_CURRENT_OVERLAP.",
-      check: (m) => m.earned49 === true,
+      check: (m) => m['earned49'] === true,
     },
     run: () => {
       const { analysis, unmapped, total } = analyze("fx-drinking-a");
@@ -181,7 +181,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
       };
     },
     implicatesArchitecture: (m, flags) =>
-      m.unmappedOverlapFlag === true || flags.some((f) => f.includes("Unmapped evidence overlap")),
+      m['unmapped']OverlapFlag === true || flags.some((f) => f.includes("Unmapped evidence overlap")),
   },
 
   {
@@ -192,7 +192,7 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     prediction: {
       statement:
         "Recognition, pattern-awareness and carry-forward statements all locate at territory 9 under its existing meaning, with no statement left unmapped.",
-      check: (m) => Number(m.unmapped) === 0 && Number(m.atNine) >= 3,
+      check: (m) => Number(m['unmapped']) === 0 && Number(m['atNine']) >= 3,
     },
     run: () => {
       const { analysis, unmapped, total } = analyze("fx-number-nine");
@@ -220,9 +220,9 @@ export const EXPERIMENTS: ExperimentDesign[] = [
       statement:
         "Both behaviours produce located structure in at least two territories, and their occupancy signatures are not identical — structures may recur without being forced to match.",
       check: (m) =>
-        Number(m.drinkingTerritories) >= 2 &&
-        Number(m.gamblingTerritories) >= 2 &&
-        m.identicalSignature === false,
+        Number(m['drinkingTerritories']) >= 2 &&
+        Number(m['gamblingTerritories']) >= 2 &&
+        m['identicalSignature'] === false,
     },
     run: () => {
       const d = analyze("fx-drinking-a");
@@ -254,9 +254,9 @@ export const EXPERIMENTS: ExperimentDesign[] = [
       statement:
         "Three differently worded responses from three probes enter territory 5 as three distinct semantic keys and three distinct probes, with nothing collapsed as redundancy.",
       check: (m) =>
-        Number(m.distinctSemanticKeys) === 3 &&
-        Number(m.distinctProbes) === 3 &&
-        Number(m.redundancyCollapsed) === 0,
+        Number(m['distinctSemanticKeys']) === 3 &&
+        Number(m['distinctProbes']) === 3 &&
+        Number(m['redundancyCollapsed']) === 0,
     },
     run: () => {
       const { analysis } = analyze("fx-distinctness");
