@@ -125,16 +125,30 @@ export interface V2Analysis {
 }
 
 export interface V2Config {
-  /** Distinct shared semantic keys required before an intersection is earned. */
+  /**
+   * Distinct shared semantic keys required before an intersection is earned.
+   * RESEARCH / UNVALIDATED.
+   */
   MIN_SHARED_SEMANTIC_KEYS: number;
-  /** Distinct shared probes required before an intersection is earned. */
+  /**
+   * Distinct shared probes required before an intersection is earned.
+   * Locked V2 default: 1. A response earns an intersection when it
+   * demonstrates both meanings; one evidence statement may legitimately
+   * support multiple territories. Independent corroboration (more probes)
+   * is recorded on the relationship but is NOT a prerequisite.
+   */
   MIN_SHARED_PROBES: number;
 }
 
-/** RESEARCH / UNVALIDATED. Intersection gates only; scoring math untouched. */
+/**
+ * RESEARCH / UNVALIDATED. Intersection gates only; scoring math untouched.
+ * MIN_SHARED_PROBES = 1 per locked V2: a single evidence statement located
+ * in both territories earns the intersection. Independent probes remain a
+ * recorded corroboration property, never a universal gate.
+ */
 export const DEFAULT_V2_CONFIG: V2Config = {
   MIN_SHARED_SEMANTIC_KEYS: 1,
-  MIN_SHARED_PROBES: 2,
+  MIN_SHARED_PROBES: 1,
 };
 
 /* ------------------------------------------------------------------ */
