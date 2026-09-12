@@ -164,10 +164,11 @@ export function runResearchLoop(input: LoopInput = {}): ResearchLedger {
         statusAfter = fork.childHypothesis ? verdict : "testing";
         justification = `Observed result ${verdict}. Next experiment ${fork.experimentId} is selected directly from this result${fork.childHypothesis ? ` under forked hypothesis ${fork.childHypothesis.id}` : ""}.`;
       } else {
-        statusAfter = verdict;
+        const remaining = queue.get(hypothesis.id)?.length ?? 0;
+        statusAfter = remaining > 0 ? "testing" : verdict;
         justification =
-          (queue.get(hypothesis.id)?.length ?? 0) > 0
-            ? "Further queued experiment remains for this hypothesis."
+          remaining > 0
+            ? "Further queued experiment remains for this hypothesis; the line stays open."
             : "No further experiment is justified by this result; the hypothesis line closes.";
       }
     }

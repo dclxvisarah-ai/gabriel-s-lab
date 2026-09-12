@@ -52,8 +52,13 @@ export function runResearchTests(): ResearchTestResult[] {
 
   /* 3. No-new-information stopping ---------------------------------- */
   {
-    const stall = SEED_HYPOTHESES.map((h) => ({ ...h, status: "testing" as const }));
-    const l = runResearchLoop({ hypotheses: stall, budget: { maxNoNewInformation: 1 } });
+    // Same experiment queued repeatedly: the line stays open but learns nothing new.
+    const one = SEED_HYPOTHESES.filter((h) => h.id === "H1");
+    const l = runResearchLoop({
+      hypotheses: one,
+      queue: { H1: ["X1-distinctiveness", "X1-distinctiveness", "X1-distinctiveness"] },
+      budget: { maxNoNewInformation: 1, maxExperimentsPerHypothesis: 9 },
+    });
     const stalled = l.iterations.some((i) => i.statusBefore === i.statusAfter);
     push({
       id: "res-3",
