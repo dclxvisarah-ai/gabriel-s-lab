@@ -247,7 +247,31 @@ export const EXPERIMENTS: ExperimentDesign[] = [
 
   {
     id: "X6-pipeline-distinctness",
-...
+    hypothesisId: "H6",
+    mechanism: "v2.analyzeV2",
+    fixtureIds: ["fx-distinctness"],
+    prediction: {
+      statement:
+        "Three differently worded responses from three probes enter territory 5 as three distinct semantic keys and three distinct probes, with nothing collapsed as redundancy.",
+      check: (m) =>
+        Number(m['distinctSemanticKeys']) === 3 &&
+        Number(m['distinctProbes']) === 3 &&
+        Number(m['redundancyCollapsed']) === 0,
+    },
+    run: () => {
+      const { analysis } = analyze("fx-distinctness");
+      const five = analysis.occupancy.find((o) => o.territory === 5)!;
+      return {
+        metrics: {
+          distinctSemanticKeys: five.distinctSemanticKeys.length,
+          distinctProbes: five.distinctProbes.length,
+          redundancyCollapsed: five.redundancyCollapsed,
+          statements: five.statementIds.length,
+        },
+        observed: `Territory 5: ${five.statementIds.length} statements → ${five.distinctSemanticKeys.length} semantic key(s), ${five.distinctProbes.length} probe(s), ${five.redundancyCollapsed} collapsed as redundancy.`,
+        flags: analysis.flags,
+      };
+    },
     implicatesArchitecture: never,
   },
 
