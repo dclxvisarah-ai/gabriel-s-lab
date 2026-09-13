@@ -1,68 +1,53 @@
-# Autonomous Research Loop (Lab-only)
+# Add H7 / X7 — Candidate DRINK Questions Experiment
 
-A research-only controller that composes the existing Engine, V2 pipeline, taxonomy, and capture/recorder machinery into one repeatable loop. No V2 redesign, no production access, no new Numbers, no fabricated empirical data.
+Add the uploaded Lab Experiment H7 document as new code only: one new fixture, one new hypothesis, one new experiment. No existing behavior changes. Research-only; no production, no scoring, no V2 architecture changes.
 
-## The loop
+## What gets added
 
-```text
-mission ──> hypothesis pool ──> select next hypothesis
-                                      │
-                                      v
-                              experiment design
-                                      │
-                                      v
-                    execution via existing Engine / V2 pipeline
-                                      │
-                                      v
-                      result + failure analysis (why, not just pass)
-                                      │
-                                      v
-                              ledger entry appended
-                                      │
-                    ┌─────────────────┴─────────────────┐
-              budget/stop met ──> HALT            continue ──> next
-```
+### 1. New evidence origin: `candidate_construct` (additive)
 
-Every iteration is deterministic and pure: same inputs, same ledger.
+The fixture is reasoned from real research, not invented noise and not a recorded run — neither existing origin fits honestly.
 
-## State representation
+- `src/lib/lab/research/types.ts` — extend the `EvidenceOrigin` union with `"candidate_construct"`. Additive only; existing values untouched.
+- `src/lib/lab/research/controller.ts` — extend the existing "synthetic can never be an empirical finding" guard to also cover `candidate_construct` (same protection, no finding eligibility). No other controller logic changes.
 
-- **Mission**: id, question in plain research language, success criteria, explicit out-of-scope list (production, V2 promotion, Number creation).
-- **Hypothesis**: id, statement, derived-from reference (territory/CrossMap/principle it came from — never invented), status `open | testing | supported | refuted | inconclusive | blocked`, priority score, parent hypothesis id for follow-ups.
-- **Experiment**: id, hypothesis id, design (which mechanism it runs: `engine.resolve`, `engine.nextProbe`, `v2.analyzeV2`, `capture.validate`, `recorder.reconstruct`), synthetic input set, predicted outcome stated **before** execution, and the assertion that decides the verdict.
-- **Evidence provenance**: every input statement carries `origin: "synthetic_fixture" | "recorded_run"` plus runId, responseId, probeId. Synthetic origin is required to be labelled in the ledger line and in any UI render. No statement without provenance may enter an experiment.
-- **Iteration**: index, selected hypothesis, experiment, observed result, verdict, failure analysis text, and the justification for the next experiment.
-- **Ledger**: append-only array of iteration records plus derived summary (counts per status, open questions, flags). Never mutated in place; identical to the append-only discipline already used by the recorder.
-- **Budget/stopping**: max iterations, max experiments per hypothesis, no-new-information counter (N consecutive iterations producing no status change), and explicit `halt_reason`: `budget_exhausted | no_new_information | all_hypotheses_closed | blocked_needs_approval`. Recursive re-explanation without a new result counts as no new information.
+### 2. New fixture: `fx-drink-candidates`
 
-## Findings gate
+- `src/lib/lab/research/fixtures.ts` — add an optional origin/label override to the internal `set()` helper (default unchanged, so all existing fixtures are byte-identical in behavior), then add `DRINK_CANDIDATE_QUESTIONS` exactly as specified in the document:
+  - 8 statements (`c1`–`c8`), run `rx-candidate`, strength 0.6, probes `drink-recognition`, `drink-readiness`, `drink-cost-actual`, `drink-stop-locus`, `drink-urge-itself`
+  - Locations as given: c1→[3], c2→[2,5], c3→[4], c4→[6], c5→[7], c6→[5], c7→[] (unmapped — "my body made the decision for me"), c8→[2]
+  - Label: `CANDIDATE CONSTRUCT — research-reasoned, not yet answered by a real person`
+  - Register in `FIXTURES` / `FIXTURE_BY_ID`.
 
-Any ledger conclusion that would change V2, the engine math, or production is emitted as a `pending_approval` finding only. The controller can never act on it; it records it and halts that line of inquiry with `blocked_needs_approval`.
+### 3. New hypothesis H7
 
-## Reused files (unchanged)
+- `src/lib/lab/research/registry.ts` — append `h("H7", 5, ...)` exactly as worded in the document (5 candidate DRINK questions closing the coverage gap H2 flagged; derived from bubble-overlap reasoning against locked V2 + CAGE/SAMHSA/AUDIT-C construct research). No edits to H1–H6.
 
-- `src/lib/lab/engine.ts` — `resolve`, `nextProbe`, config, stopping constants (still RESEARCH/UNVALIDATED).
-- `src/lib/lab/v2/pipeline.ts` — `analyzeV2`, relationship/intersection states, Venn model.
-- `src/lib/lab/v2/territories.ts` — locked territory data and CrossMap (read-only).
-- `src/lib/lab/taxonomy.ts` — evidence kinds, `normalizeToSemanticKey`.
-- `src/lib/lab/capture.ts`, `recorder.ts`, `instrument.fixture.ts` — provenance and synthetic input source.
-- `src/lib/lab/tests.ts`, `v2/tests.ts` — existing suites stay green and untouched.
-- `src/components/lab/LabChrome.tsx`, existing route conventions.
+### 4. New experiment X7
 
-## New modules (minimal)
+- `src/lib/lab/research/experiments.ts` — append `X7-candidate-coverage` exactly as specified:
+  - Prediction (stated before run): at least 6 of 8 statements locate, occupying at least 5 distinct territories.
+  - `run()` uses existing `analyzeV2` via the same `analyze()`/`occupied()` helpers.
+  - `implicatesArchitecture`: true when unmapped > 2 — surfaces as pending_approval and pauses the line, per the document's intent.
+  - Add `H7: ["X7-candidate-coverage"]` to `SEED_QUEUE` (additive entry).
 
-1. `src/lib/lab/research/types.ts` — Mission, Hypothesis, Experiment, Iteration, Ledger, Budget, Verdict, Provenance types.
-2. `src/lib/lab/research/hypotheses.ts` — derives the hypothesis pool from existing V2 territory/CrossMap/principle data; a selection function (priority = unresolved + cheapest + most information-bearing). No hypothesis may be authored from outside established material.
-3. `src/lib/lab/research/experiments.ts` — maps a hypothesis to a runnable experiment against the existing mechanisms; builds synthetic inputs from the labelled fixture; records the pre-stated prediction.
-4. `src/lib/lab/research/controller.ts` — pure `runResearchLoop(mission, budget)` performing select → design → execute → analyse → append → stop. Returns the full ledger; no side effects, no persistence.
-5. `src/lib/lab/research/ledger.ts` — append-only ledger construction and summary derivation.
-6. `src/lib/lab/research/tests.ts` — focused assertions: determinism/order-invariance of the loop; budget halt; no-new-information halt; hypothesis status transitions incl. refuted and inconclusive; provenance required and synthetic labelling enforced; a finding that would touch V2/production yields `pending_approval` + `blocked_needs_approval`; existing engine/V2 outputs unchanged when driven through the controller.
-7. `src/routes/research.tsx` — read-only research terminal: mission, ledger iterations, hypothesis statuses, halt reason, pending-approval findings; plus a nav entry in `LabChrome`. Display only; no scoring authority.
+## Expected outcome
 
-## Verification on implementation
+With the given locations: 7 of 8 locate (c7 unmapped), across 6 territories (2,3,4,5,6,7) — prediction should pass, `implicatesArchitecture` false (1 unmapped ≤ 2). H7 will run when the research loop next selects it.
 
-Run new research suite plus existing engine / V2 / capture / recorder suites and a typecheck; all pre-existing suites must remain at their current counts.
+## Tests (additive)
 
-## Out of scope
+- `src/lib/lab/research/tests.ts` — add focused assertions only:
+  - X7 runs through the real pipeline and its prediction check passes on the fixture (7 located, 6 territories).
+  - `candidate_construct` origin is labeled honestly and is **not** empirical-finding-eligible (same protection as synthetic).
+  - All existing assertions remain untouched and passing.
 
-Production reads/writes, V2 or threshold promotion, new Numbers, real participant data, persistence/database, live capture, branch behavioural testing.
+## Verification
+
+- Run research tests + full existing suites (V2 12, engine 10, capture 11, recorder 10) and typecheck; report exact counts.
+- The read-only `/research` page will show H7/X7 on the next run with no route changes needed.
+
+## Explicitly not done
+
+- No claim that passing X7 proves the questions work with real people — the document itself states that requires real participant evidence.
+- No production/promotion step, no behavioral branch testing, no changes to locked V2 data, scoring, or thresholds.
