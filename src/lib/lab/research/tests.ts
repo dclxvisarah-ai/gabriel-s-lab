@@ -103,19 +103,22 @@ export function runResearchTests(): ResearchTestResult[] {
 
   /* 6. Provenance and synthetic labelling ----------------------------- */
   {
-    const allSynthetic = FIXTURES.every(
-      (f) => f.origin === "synthetic_fixture" && f.label.includes("SYNTHETIC FIXTURE") &&
-        f.statements.every((s) => s.origin === "synthetic_fixture" && s.fixtureLabel.includes("SYNTHETIC")),
-    );
+    const honestlyLabelled = FIXTURES.every((f) => {
+      const tag = f.origin === "candidate_construct" ? "CANDIDATE CONSTRUCT" : "SYNTHETIC FIXTURE";
+      return (
+        f.label.includes(tag) &&
+        f.statements.every((s) => s.origin === f.origin && s.fixtureLabel.includes(tag))
+      );
+    });
     const noFindings =
       ledger.iterations.every((i) => i.empiricalFindingEligible === false) &&
       ledger.summary.empiricalFindings === 0;
     push({
       id: "res-6",
-      name: "Synthetic fixtures are labelled and can never become findings",
-      intent: "Every statement carries provenance; synthetic origin blocks empirical finding eligibility.",
-      passed: allSynthetic && noFindings,
-      observed: `all fixtures labelled synthetic: ${allSynthetic}; empirical findings ${ledger.summary.empiricalFindings}`,
+      name: "Non-recorded evidence is labelled honestly and can never become a finding",
+      intent: "Every statement carries provenance; synthetic and candidate-construct origins block empirical finding eligibility.",
+      passed: honestlyLabelled && noFindings,
+      observed: `all fixtures labelled by origin: ${honestlyLabelled}; empirical findings ${ledger.summary.empiricalFindings}`,
     });
   }
 
@@ -255,6 +258,42 @@ export function runResearchTests(): ResearchTestResult[] {
           ledger.stopReason,
         ) && ledger.iterations.length <= DEFAULT_BUDGET.maxIterations,
       observed: `stop reason ${ledger.stopReason} after ${ledger.iterations.length}/${DEFAULT_BUDGET.maxIterations} iterations`,
+    });
+  }
+
+  /* 15. X7 candidate coverage runs through the real pipeline -------------------- */
+  {
+    const x7 = EXPERIMENT_BY_ID.get("X7-candidate-coverage")!;
+    const { metrics } = x7.run();
+    const x7Iteration = ledger.iterations.find((i) => i.experimentId === "X7-candidate-coverage");
+    const h7 = ledger.hypotheses.find((h) => h.id === "H7");
+    push({
+      id: "res-15",
+      name: "X7 candidate DRINK questions locate distinctly through the real V2 pipeline",
+      intent: "The candidate fixture produces the predicted coverage: >= 6 of 8 located across >= 5 territories, with no architecture implication.",
+      passed:
+        x7.prediction.check(metrics) === true &&
+        x7.implicatesArchitecture(metrics, []) === false &&
+        x7Iteration?.verdict === "supported" &&
+        h7?.status === "supported",
+      observed: `located=${metrics["located"]}/${metrics["statements"]}, territories=${metrics["territoriesOccupied"]}, signature=${metrics["signature"]}; H7 status ${h7?.status ?? "not run"}`,
+    });
+  }
+
+  /* 16. Candidate constructs are honestly labelled, never findings -------------- */
+  {
+    const f = fixture("fx-drink-candidates");
+    const labelled =
+      f.origin === "candidate_construct" &&
+      f.label.includes("CANDIDATE CONSTRUCT") &&
+      f.statements.every((s) => s.origin === "candidate_construct" && s.fixtureLabel.includes("CANDIDATE CONSTRUCT"));
+    const x7Iteration = ledger.iterations.find((i) => i.experimentId === "X7-candidate-coverage");
+    push({
+      id: "res-16",
+      name: "Candidate-construct evidence is labelled and ineligible as an empirical finding",
+      intent: "Research-reasoned evidence is distinguished from both invented noise and recorded runs, and gets the same never-a-finding protection.",
+      passed: labelled && x7Iteration?.empiricalFindingEligible === false,
+      observed: `origin ${f.origin}, label ok: ${labelled}; X7 finding-eligible: ${x7Iteration?.empiricalFindingEligible}`,
     });
   }
 

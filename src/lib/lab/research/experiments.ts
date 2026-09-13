@@ -274,6 +274,36 @@ export const EXPERIMENTS: ExperimentDesign[] = [
     },
     implicatesArchitecture: never,
   },
+
+  {
+    id: "X7-candidate-coverage",
+    hypothesisId: "H7",
+    mechanism: "v2.analyzeV2",
+    fixtureIds: ["fx-drink-candidates"],
+    prediction: {
+      statement:
+        "At least 6 of 8 candidate statements locate to a territory, and the located statements occupy at least 5 distinct territories — i.e. these questions add real distinguishing coverage, not overlap with what already exists.",
+      check: (m) => Number(m['located']) >= 6 && Number(m['territoriesOccupied']) >= 5,
+    },
+    run: () => {
+      const { analysis, unmapped, total } = analyze("fx-drink-candidates");
+      const t = occupied(analysis);
+      return {
+        metrics: {
+          statements: total,
+          unmapped,
+          located: total - unmapped,
+          territoriesOccupied: t.length,
+          signature: signature(analysis),
+        },
+        observed: `${total - unmapped}/${total} candidate statements located across territories ${t.join(", ")}.`,
+        flags: analysis.flags,
+      };
+    },
+    /* If more than 2 of 8 fail to locate, that implicates the architecture itself
+       (e.g. the 'body decided' gap) and pauses the line for review. */
+    implicatesArchitecture: (m) => Number(m['unmapped']) > 2,
+  },
 ];
 
 export const EXPERIMENT_BY_ID = new Map(EXPERIMENTS.map((e) => [e.id, e]));
@@ -286,6 +316,7 @@ export const SEED_QUEUE: Record<string, string[]> = {
   H4: ["X4-nine-meaning"],
   H5: ["X5-cross-behaviour"],
   H6: ["X6-pipeline-distinctness"],
+  H7: ["X7-candidate-coverage"],
 };
 
 export function metricsSummary(m: Metrics): string {

@@ -12,6 +12,7 @@ import type { TerritoryId } from "../v2/territories";
 import type { FixtureSet, ResearchStatement } from "./types";
 
 const SYNTHETIC_LABEL = "SYNTHETIC FIXTURE — invented text, not participant data";
+const CANDIDATE_LABEL = "CANDIDATE CONSTRUCT — research-reasoned, not yet answered by a real person";
 
 function s(
   runId: string,
@@ -21,6 +22,7 @@ function s(
   text: string,
   kind: EvidenceKind = "behavioral_instance",
   strength = 0.9,
+  origin: "synthetic_fixture" | "candidate_construct" = "synthetic_fixture",
 ): ResearchStatement {
   return {
     id,
@@ -31,13 +33,19 @@ function s(
     kind,
     strength,
     locations,
-    origin: "synthetic_fixture",
-    fixtureLabel: SYNTHETIC_LABEL,
+    origin,
+    fixtureLabel: origin === "candidate_construct" ? CANDIDATE_LABEL : SYNTHETIC_LABEL,
   };
 }
 
-function set(id: string, label: string, statements: ResearchStatement[]): FixtureSet {
-  return { id, label: `${label} — ${SYNTHETIC_LABEL}`, origin: "synthetic_fixture", runId: statements[0]!.runId, statements };
+function set(
+  id: string,
+  label: string,
+  statements: ResearchStatement[],
+  origin: "synthetic_fixture" | "candidate_construct" = "synthetic_fixture",
+): FixtureSet {
+  const tag = origin === "candidate_construct" ? CANDIDATE_LABEL : SYNTHETIC_LABEL;
+  return { id, label: `${label} — ${tag}`, origin, runId: statements[0]!.runId, statements };
 }
 
 /* Addiction architecture, established constructs. */
@@ -96,6 +104,18 @@ const PIPELINE_DISTINCTNESS = set("fx-distinctness", "Pipeline distinctness at t
   s("rx-distinct", "p3", "pq-24", [5], "chose the earlier train so the evening ended sooner"),
 ]);
 
+/* Candidate DRINK questions: research-reasoned, not yet answered by a real person. */
+const DRINK_CANDIDATE_QUESTIONS = set("fx-drink-candidates", "5 new DRINK questions (recognition, readiness, cost, stop-locus, urge)", [
+  s("rx-candidate", "c1", "drink-recognition", [3], "I've noticed it more than once", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c2", "drink-recognition", [2, 5], "I've thought that, then talked myself out of it", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c3", "drink-readiness", [4], "I'm not trying to change it", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c4", "drink-readiness", [6], "I want to, and I think I actually could", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c5", "drink-cost-actual", [7], "how I feel physically the next day, regularly", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c6", "drink-stop-locus", [5], "I decided, and that was enough", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c7", "drink-stop-locus", [], "my body made the decision for me", "behavioral_instance", 0.6, "candidate_construct"),
+  s("rx-candidate", "c8", "drink-urge-itself", [2], "both, and I can't tell which is louder", "behavioral_instance", 0.6, "candidate_construct"),
+], "candidate_construct");
+
 export const FIXTURES: FixtureSet[] = [
   ADDICTION_CORE,
   UNRESOLVED_CONSTRUCTS,
@@ -105,6 +125,7 @@ export const FIXTURES: FixtureSet[] = [
   NUMBER_NINE,
   GAMBLING_CORE,
   PIPELINE_DISTINCTNESS,
+  DRINK_CANDIDATE_QUESTIONS,
 ];
 
 export const FIXTURE_BY_ID = new Map(FIXTURES.map((f) => [f.id, f]));

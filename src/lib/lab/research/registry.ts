@@ -77,4 +77,10 @@ export const SEED_HYPOTHESES: Hypothesis[] = [
     "The existing questions produce evidence that enters the V2 pipeline distinctly enough to support those distinctions.",
     "Existing V2 pipeline semantic-key and probe handling",
   ),
+  h(
+    "H7",
+    5,
+    "The 5 new DRINK questions (recognition, readiness, actual cost, stop-locus, urge) produce evidence that locates distinctly across territories, closing the coverage gap H2 already flagged as unresolved.",
+    "Bubble-overlap reasoning against locked V2 territories + CAGE/SAMHSA/AUDIT-C construct research",
+  ),
 ];
