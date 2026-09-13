@@ -223,7 +223,7 @@ export function runResearchLoop(input: LoopInput = {}): ResearchLedger {
       iterationsRun: iterations.length,
       byStatus,
       empiricalFindings: iterations.filter((i) => i.empiricalFindingEligible).length,
-      note: "All evidence in this run came from explicitly labelled synthetic fixtures. Synthetic evidence cannot become an empirical finding; this run validates the research-orchestration machinery only, never the psychological model.",
+      note: "All evidence in this run came from explicitly labelled synthetic fixtures or candidate constructs. Neither can become an empirical finding; this run validates the research-orchestration machinery only, never the psychological model.",
     },
   };
 }

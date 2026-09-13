@@ -103,19 +103,22 @@ export function runResearchTests(): ResearchTestResult[] {
 
   /* 6. Provenance and synthetic labelling ----------------------------- */
   {
-    const allSynthetic = FIXTURES.every(
-      (f) => f.origin === "synthetic_fixture" && f.label.includes("SYNTHETIC FIXTURE") &&
-        f.statements.every((s) => s.origin === "synthetic_fixture" && s.fixtureLabel.includes("SYNTHETIC")),
-    );
+    const honestlyLabelled = FIXTURES.every((f) => {
+      const tag = f.origin === "candidate_construct" ? "CANDIDATE CONSTRUCT" : "SYNTHETIC FIXTURE";
+      return (
+        f.label.includes(tag) &&
+        f.statements.every((s) => s.origin === f.origin && s.fixtureLabel.includes(tag))
+      );
+    });
     const noFindings =
       ledger.iterations.every((i) => i.empiricalFindingEligible === false) &&
       ledger.summary.empiricalFindings === 0;
     push({
       id: "res-6",
-      name: "Synthetic fixtures are labelled and can never become findings",
-      intent: "Every statement carries provenance; synthetic origin blocks empirical finding eligibility.",
-      passed: allSynthetic && noFindings,
-      observed: `all fixtures labelled synthetic: ${allSynthetic}; empirical findings ${ledger.summary.empiricalFindings}`,
+      name: "Non-recorded evidence is labelled honestly and can never become a finding",
+      intent: "Every statement carries provenance; synthetic and candidate-construct origins block empirical finding eligibility.",
+      passed: honestlyLabelled && noFindings,
+      observed: `all fixtures labelled by origin: ${honestlyLabelled}; empirical findings ${ledger.summary.empiricalFindings}`,
     });
   }
 
