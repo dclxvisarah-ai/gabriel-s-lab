@@ -249,15 +249,42 @@ export function runResearchTests(): ResearchTestResult[] {
 
   /* 14. Bounded by construction ------------------------------------------------ */
   {
+...
+  }
+
+  /* 15. X7 candidate coverage runs through the real pipeline -------------------- */
+  {
+    const x7 = EXPERIMENT_BY_ID.get("X7-candidate-coverage")!;
+    const { metrics } = x7.run();
+    const x7Iteration = ledger.iterations.find((i) => i.experimentId === "X7-candidate-coverage");
+    const h7 = ledger.hypotheses.find((h) => h.id === "H7");
     push({
-      id: "res-14",
-      name: "Every run terminates with an explicit stop reason",
-      intent: "Budgets are explicit and the loop always reports why it stopped.",
+      id: "res-15",
+      name: "X7 candidate DRINK questions locate distinctly through the real V2 pipeline",
+      intent: "The candidate fixture produces the predicted coverage: >= 6 of 8 located across >= 5 territories, with no architecture implication.",
       passed:
-        ["budget_exhausted", "no_new_information", "all_hypotheses_closed", "blocked_needs_approval"].includes(
-          ledger.stopReason,
-        ) && ledger.iterations.length <= DEFAULT_BUDGET.maxIterations,
-      observed: `stop reason ${ledger.stopReason} after ${ledger.iterations.length}/${DEFAULT_BUDGET.maxIterations} iterations`,
+        x7.prediction.check(metrics) === true &&
+        x7.implicatesArchitecture(metrics, []) === false &&
+        x7Iteration?.verdict === "supported" &&
+        h7?.status === "supported",
+      observed: `located=${metrics["located"]}/${metrics["statements"]}, territories=${metrics["territoriesOccupied"]}, signature=${metrics["signature"]}; H7 status ${h7?.status ?? "not run"}`,
+    });
+  }
+
+  /* 16. Candidate constructs are honestly labelled, never findings -------------- */
+  {
+    const f = fixture("fx-drink-candidates");
+    const labelled =
+      f.origin === "candidate_construct" &&
+      f.label.includes("CANDIDATE CONSTRUCT") &&
+      f.statements.every((s) => s.origin === "candidate_construct" && s.fixtureLabel.includes("CANDIDATE CONSTRUCT"));
+    const x7Iteration = ledger.iterations.find((i) => i.experimentId === "X7-candidate-coverage");
+    push({
+      id: "res-16",
+      name: "Candidate-construct evidence is labelled and ineligible as an empirical finding",
+      intent: "Research-reasoned evidence is distinguished from both invented noise and recorded runs, and gets the same never-a-finding protection.",
+      passed: labelled && x7Iteration?.empiricalFindingEligible === false,
+      observed: `origin ${f.origin}, label ok: ${labelled}; X7 finding-eligible: ${x7Iteration?.empiricalFindingEligible}`,
     });
   }
 
