@@ -12,6 +12,7 @@ import type { TerritoryId } from "../v2/territories";
 import type { FixtureSet, ResearchStatement } from "./types";
 
 const SYNTHETIC_LABEL = "SYNTHETIC FIXTURE — invented text, not participant data";
+const CANDIDATE_LABEL = "CANDIDATE CONSTRUCT — research-reasoned, not yet answered by a real person";
 
 function s(
   runId: string,
@@ -21,6 +22,7 @@ function s(
   text: string,
   kind: EvidenceKind = "behavioral_instance",
   strength = 0.9,
+  origin: "synthetic_fixture" | "candidate_construct" = "synthetic_fixture",
 ): ResearchStatement {
   return {
     id,
@@ -31,13 +33,19 @@ function s(
     kind,
     strength,
     locations,
-    origin: "synthetic_fixture",
-    fixtureLabel: SYNTHETIC_LABEL,
+    origin,
+    fixtureLabel: origin === "candidate_construct" ? CANDIDATE_LABEL : SYNTHETIC_LABEL,
   };
 }
 
-function set(id: string, label: string, statements: ResearchStatement[]): FixtureSet {
-  return { id, label: `${label} — ${SYNTHETIC_LABEL}`, origin: "synthetic_fixture", runId: statements[0]!.runId, statements };
+function set(
+  id: string,
+  label: string,
+  statements: ResearchStatement[],
+  origin: "synthetic_fixture" | "candidate_construct" = "synthetic_fixture",
+): FixtureSet {
+  const tag = origin === "candidate_construct" ? CANDIDATE_LABEL : SYNTHETIC_LABEL;
+  return { id, label: `${label} — ${tag}`, origin, runId: statements[0]!.runId, statements };
 }
 
 /* Addiction architecture, established constructs. */

@@ -10,7 +10,7 @@
 import type { EvidenceStatement } from "../v2/pipeline";
 
 /** Provenance of every evidence statement entering an experiment. */
-export type EvidenceOrigin = "synthetic_fixture" | "recorded_run";
+export type EvidenceOrigin = "synthetic_fixture" | "recorded_run" | "candidate_construct";
 
 export interface ResearchStatement extends EvidenceStatement {
   origin: EvidenceOrigin;
