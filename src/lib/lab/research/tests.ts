@@ -249,7 +249,16 @@ export function runResearchTests(): ResearchTestResult[] {
 
   /* 14. Bounded by construction ------------------------------------------------ */
   {
-...
+    push({
+      id: "res-14",
+      name: "Every run terminates with an explicit stop reason",
+      intent: "Budgets are explicit and the loop always reports why it stopped.",
+      passed:
+        ["budget_exhausted", "no_new_information", "all_hypotheses_closed", "blocked_needs_approval"].includes(
+          ledger.stopReason,
+        ) && ledger.iterations.length <= DEFAULT_BUDGET.maxIterations,
+      observed: `stop reason ${ledger.stopReason} after ${ledger.iterations.length}/${DEFAULT_BUDGET.maxIterations} iterations`,
+    });
   }
 
   /* 15. X7 candidate coverage runs through the real pipeline -------------------- */
